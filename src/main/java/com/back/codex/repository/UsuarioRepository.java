@@ -1,10 +1,10 @@
 package com.back.codex.repository;
 
-import com.back.codex.model.Usuarios;
+import com.back.codex.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface UsuarioRepository extends JpaRepository<Usuarios, Long> {
-    Optional<Usuarios> findUsuariosByUsuario(String usuario);
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+    Optional<Usuario> findByLogin(String login);
 }

@@ -1,74 +1,48 @@
 package com.back.codex.service;
 
-import com.back.codex.dto.request.UsuarioPostRequest;
-import com.back.codex.dto.request.UsuarioPutRequest;
-import com.back.codex.dto.response.UsuarioResponse;
-import com.back.codex.enums.Role;
+
+import com.back.codex.config.security.JwtUtil;
+import com.back.codex.dto.LoginRequest;
+import com.back.codex.dto.LoginResponse;
+import com.back.codex.dto.UsuarioRequest;
+import com.back.codex.dto.UsuarioResponse;
+import com.back.codex.exception.SenhaInvalidaException;
 import com.back.codex.exception.UsuarioNaoEncontradoException;
-import com.back.codex.mapper.UsuarioMapper;
-import com.back.codex.model.Usuarios;
+import com.back.codex.model.Usuario;
 import com.back.codex.repository.UsuarioRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class UsuarioService {
 
-    private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-    public UsuarioService(PasswordEncoder passwordEncoder, UsuarioRepository usuariosRespository) {
-        this.passwordEncoder = passwordEncoder;
-        this.usuarioRepository = usuariosRespository;
-    }
+    public LoginResponse login(LoginRequest loginRequest) {
+        Usuario usuario = usuarioRepository.findByLogin(loginRequest.login().toLowerCase())
+                .orElseThrow(() -> new UsuarioNaoEncontradoException(loginRequest.login()));
 
-    @Transactional(readOnly = true)
-    public UsuarioResponse getUsuarioById(Long id) {
-        Usuarios usuario = usuarioRepository.findById(id).orElseThrow(() -> new UsuarioNaoEncontradoException(id));
-        return UsuarioMapper.toResponse(usuario);
-    }
-
-    @Transactional(readOnly = true)
-    public List<UsuarioResponse> getAllUsuarios() {
-        return usuarioRepository.findAll().stream()
-                .map(UsuarioMapper::toResponse)
-                .toList();
-    }
-
-    @Transactional
-    public UsuarioResponse createUsuario(UsuarioPostRequest request) {
-        Usuarios usuario = UsuarioMapper.toEntity(request);
-        usuario.setSenha(passwordEncoder.encode(request.senha()));
-
-        if (request.role() != null) {
-            usuario.setRoles(Set.of(request.role()));
-        } else {
-            usuario.setRoles(Set.of(Role.ROLE_USER));
+        if (!passwordEncoder.matches(loginRequest.senha(), usuario.getSenha())) {
+            throw new SenhaInvalidaException(loginRequest.login());
         }
 
-        usuario.setCriadoEm(LocalDate.now());
-        usuarioRepository.save(usuario);
-        return UsuarioMapper.toResponse(usuario);
+        return new LoginResponse(jwtUtil.generateToken(usuario));
     }
 
-    @Transactional
-    public void deleteUsuario(Long id) {
-        if (!usuarioRepository.existsById(id)) {
-            throw new UsuarioNaoEncontradoException(id);
-        }
-        usuarioRepository.deleteById(id);
+    public UsuarioResponse cadastrarUsuario(UsuarioRequest usuarioReq) {
+        Usuario usuario = usuarioReq.toEntity();
+        usuario.setLogin(usuarioReq.login().toLowerCase());
+        usuario.setSenha(passwordEncoder.encode(usuarioReq.senha()));
+        return UsuarioResponse.from(usuarioRepository.save(usuario));
     }
 
-    @Transactional
-    public UsuarioResponse updateUsuario(Long id, UsuarioPutRequest usuarioUpdate) {
-        Usuarios usuario = usuarioRepository.findById(id).orElseThrow(() -> new UsuarioNaoEncontradoException(id));
-        UsuarioMapper.merge(usuario, usuarioUpdate);
-        usuario = usuarioRepository.save(usuario);
-        return UsuarioMapper.toResponse(usuario);
+    public List<UsuarioResponse> findAll() {
+        return usuarioRepository.findAll().stream().map(UsuarioResponse::from).toList();
     }
 }
