@@ -14,15 +14,15 @@ import java.time.LocalDateTime;
 
 @MappedSuperclass
 @FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenant", type = String.class))
-@Filter(name = "tenantFilter", condition = "identificador_unico = :tenant")
+@Filter(name = "tenantFilter", condition = "tenant = :tenant")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 public abstract class TenantBaseEntity {
     
     @TenantField
-    @Column(name = "identificador_unico", nullable = false, updatable = false)
-    private String identificadorUnico;
+    @Column(name = "tenant", nullable = false, updatable = false)//Referencia o Identificador Único do usuário
+    private String tenant;
     
     @CreatedDate
     @Column(name = "criado_em", nullable = false, updatable = false)
@@ -30,5 +30,5 @@ public abstract class TenantBaseEntity {
     
     @LastModifiedDate
     @Column(name = "atualizado_em")
-    private LocalDateTime atualizadoEm = LocalDateTime.now();
+    private LocalDateTime atualizadoEm;
 }

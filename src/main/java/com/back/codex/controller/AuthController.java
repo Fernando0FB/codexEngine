@@ -1,8 +1,9 @@
 package com.back.codex.controller;
 
-import com.back.codex.dto.LoginRequest;
-import com.back.codex.dto.UsuarioRequest;
+import com.back.codex.dto.request.LoginRequest;
+import com.back.codex.dto.request.UsuarioRequest;
 import com.back.codex.service.UsuarioService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -24,7 +25,7 @@ public class AuthController {
     }
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<?> cadastrarUsuario(@RequestBody UsuarioRequest usuarioReq) {
+    public ResponseEntity<?> cadastrarUsuario(@Valid @RequestBody UsuarioRequest usuarioReq) {
         return ResponseEntity.ok(usuarioService.cadastrarUsuario(usuarioReq));
     }
 }

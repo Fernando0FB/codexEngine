@@ -1,4 +1,3 @@
-// src/main/java/com/microSaas/agenda/security/SecurityConfig.java
 package com.back.codex.config.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 );
 

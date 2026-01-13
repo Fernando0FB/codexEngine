@@ -35,13 +35,32 @@ public class TenantAspect {
     public void setTenantOnCreate(JoinPoint joinPoint) throws IllegalAccessException {
         String tenant = TenantContext.getCurrentTenant();
         for (Object arg : joinPoint.getArgs()) {
-            Field[] fields = arg.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                if (field.isAnnotationPresent(TenantField.class)) {
-                    field.setAccessible(true);
-                    field.set(arg, tenant);
+            if (arg == null) {
+                continue;
+            }
+
+            Class<?> clazz = arg.getClass();
+
+            while (clazz != null && clazz != Object.class) {
+                Field[] fields = clazz.getDeclaredFields();
+
+                for (Field field : fields) {
+                    if (field.isAnnotationPresent(TenantField.class)) {
+                        try {
+                            field.setAccessible(true);
+                            Object currentValue = field.get(arg);
+
+                            if (currentValue == null) {
+                                field.set(arg, tenant);
+                            }
+                        } catch (IllegalAccessException e) {
+                        }
+                    }
                 }
+
+                clazz = clazz.getSuperclass();
             }
         }
+
     }
 }
